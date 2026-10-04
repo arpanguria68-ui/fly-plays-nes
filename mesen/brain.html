@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FLYBRAIN · Brain</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:ital,wdth,wght@1,125,900&family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@400;600&family=Silkscreen&display=swap">
+<link rel="stylesheet" href="/retro.css">
+<style>
+.wrap{max-width:1440px;margin:0 auto;padding:16px 16px 40px}
+.intro{display:flex;flex-wrap:wrap;gap:10px 24px;align-items:flex-end;justify-content:space-between;margin-bottom:14px}
+.intro h1{margin:0;font:italic 900 22px/1 "Archivo",var(--sans);font-stretch:125%;color:var(--ink-case)}
+.intro p{margin:6px 0 0;max-width:78ch;font:13px/1.5 var(--sans);color:var(--dim-case)}
+.status{font:12px var(--mono);display:flex;gap:14px;flex-wrap:wrap;align-items:center;color:var(--dim-case)}
+.status b{color:var(--ink-case);font-weight:600}
+.grid{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(min(100%,330px),1fr))}
+.card{display:flex;flex-direction:column}
+canvas{display:block;width:100%;height:auto;border-radius:2px}
+.px{image-rendering:pixelated;background:#000}
+.scroll{overflow-x:auto}.scroll canvas{min-width:640px}
+.pad{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.key2{font:400 10px var(--label);letter-spacing:.08em;text-transform:uppercase;padding:5px 8px 4px;border-radius:2px;color:var(--muted);background:#202125;box-shadow:inset 0 1px 0 rgba(255,255,255,.06)}
+.key2.on{background:var(--amber);color:#111;box-shadow:0 0 10px rgba(255,178,62,.6)}
+.legend{font:11px var(--mono);color:var(--muted);margin-top:6px}
+#acting{font:13px var(--mono)}
+</style>
+</head>
+<body>
+<header class="deck">
+  <a class="logo" href="/">FLYBRAIN<small>MODEL FB-166700 · NES</small></a>
+  <nav class="keys" aria-label="pages">
+    <a class="key" href="/"><i></i>PLAY</a>
+    <a class="key on" href="/brain" aria-current="page"><i></i>BRAIN</a>
+    <a class="key" href="/rewards"><i></i>REWARDS</a>
+  </nav>
+  <div class="lamp"><span class="dot" id="dot"></span>POWER</div>
+</header>
+<div class="ribs"></div>
+<div class="wrap">
+<div class="intro"><div><h1>Inside the brain, live</h1>
+<p>Exactly what the running fly code hands to the connectome each tick (which neurons, how much voltage) and the spikes the connectome returns. Read from <code>FlyBrain.step()</code>'s arguments and results by <code>brain_monitor.py</code>; nothing on this page is simulated.</p></div>
+<div class="status"><b id="state">connecting…</b>
+<label for="fly">fly</label><select id="fly"><option value="0">H (sees left/right)</option><option value="1">V (screen turned 90°)</option></select>
+<span id="meta"></span></div></div>
+<div class="grid">
+ <div class="card"><h2>Game screen</h2><p>The emulator's picture (server engine).</p><div class="screen"><canvas class="px" id="screen" width="256" height="240" aria-label="game screen"></canvas></div></div>
+ <div class="card"><h2>Retina given to the fly code</h2><p>The exact grey image passed to <code>react()</code> this tick.</p><div class="screen"><canvas id="cRetina" class="px" width="128" height="120"></canvas></div></div>
+ <div class="card"><h2>Voltage into T4/T5, left eye</h2><p>Each dot is a real T4/T5 neuron at its column. Brightness = injected voltage; colour = the direction it prefers.</p><div class="screen"><canvas id="cEyeL" width="300" height="230"></canvas></div></div>
+ <div class="card"><h2>Voltage into T4/T5, right eye</h2><p id="nDriven">&nbsp;</p><div class="screen"><canvas id="cEyeR" width="300" height="230"></canvas><div class="legend">preferred direction: <span style="color:hsl(0,80%,50%)">right</span> · <span style="color:hsl(90,70%,38%)">down</span> · <span style="color:hsl(180,70%,38%)">left</span> · <span style="color:hsl(270,70%,60%)">up</span></div></div></div>
+ <div class="card"><h2>Everything injected this tick</h2><p>Neuron set · mean voltage per brain step for this fly · neurons. chase = LC10a, loom = LPLC2, threat = LC4, shot = LPLC1.</p><div class="screen"><table id="tInj"><thead><tr><th>input</th><th class="n">volts</th><th class="n">cells</th></tr></thead><tbody></tbody></table></div></div>
+ <div class="card"><h2>Spikes per group, this tick</h2><p>Real spike counts in identified cell types, left vs right brain side.</p><div class="screen"><canvas id="cSpk" width="420" height="330"></canvas></div></div>
+ <div class="card" style="grid-column:1/-1"><h2>Spike raster, last 5 s</h2><p>Real neurons, 4 per group (fly H). One column per tick; a mark = that neuron fired. Now is the right edge.</p><div class="screen scroll"><canvas id="cRaster" width="1000" height="450"></canvas></div></div>
+ <div class="card"><h2>What the brain made the controller do</h2><p>Readouts past threshold, and buttons pressed this tick.</p><div class="screen"><div id="acting"></div><div class="pad" id="pad"></div></div></div>
+</div>
+</div>
+<script>
+const $ = id => document.getElementById(id);
+const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+async function inflate(b64) {
+  const bin = Uint8Array.from(atob(b64), c => c.charCodeAt(0));
+  return new Uint8Array(await new Response(new Blob([bin]).stream().pipeThrough(new DecompressionStream('deflate'))).arrayBuffer());
+}
+let M = null, lastSeq = -1, busy = false;
+
+function drawRetina(buf) {
+  const c = $('cRetina').getContext('2d'), im = c.createImageData(128, 120);
+  for (let p = 0; p < 128 * 120; p++) { const k = p * 4; im.data[k] = im.data[k + 1] = im.data[k + 2] = buf[p]; im.data[k + 3] = 255; }
+  c.putImageData(im, 0, 0);
+}
+function drawEye(id, left, drive, fly) {
+  const cv = $(id), c = cv.getContext('2d');
+  c.fillStyle = css('--panel'); c.fillRect(0, 0, cv.width, cv.height);
+  const x0 = left ? 0 : 0.4, rule = css('--rule');
+  let n = 0;
+  for (let k = 0; k < M.cells; k++) {
+    if (M.left[k] !== (left ? 1 : 0)) continue;
+    const v = drive[k * 2 + fly] / 255, px = 8 + (M.x[k] - x0) / 0.6 * (cv.width - 16), py = 8 + M.y[k] * (cv.height - 16);
+    if (v > 0) { n++; c.fillStyle = `hsla(${M.hue[k]},85%,50%,${Math.min(1, 0.3 + v * 3)})`; c.fillRect(px - 1.5, py - 1.5, 3, 3); }
+    else { c.fillStyle = rule; c.fillRect(px - 0.5, py - 0.5, 1, 1); }
+  }
+  return n;
+}
+function drawSpk(spk, fly) {
+  const cv = $('cSpk'), c = cv.getContext('2d');
+  c.fillStyle = css('--panel'); c.fillRect(0, 0, cv.width, cv.height);
+  const names = [...new Set(Object.keys(spk).map(k => k.replace(/ [LR]$/, '')))];
+  const top = 16, rowH = (cv.height - top) / names.length, mid = cv.width / 2;
+  const mx = Math.max(4, ...Object.values(spk).map(v => v[fly]));
+  c.font = '11px ui-monospace, monospace'; c.textBaseline = 'middle';
+  names.forEach((nm, r) => {
+    const y = top + r * rowH + rowH / 2;
+    c.fillStyle = css('--muted'); c.textAlign = 'center'; c.fillText(nm, mid, y);
+    for (const s of ['L', 'R']) {
+      const v = (spk[nm + ' ' + s] || [0, 0])[fly], len = v / mx * (mid - 80);
+      c.fillStyle = css(s === 'L' ? '--L' : '--R');
+      if (s === 'L') c.fillRect(mid - 36 - len, y - rowH * 0.32, len, rowH * 0.64); else c.fillRect(mid + 36, y - rowH * 0.32, len, rowH * 0.64);
+      if (v) { c.fillStyle = css('--ink'); c.textAlign = s === 'L' ? 'right' : 'left'; c.fillText(v, s === 'L' ? mid - 40 - len : mid + 40 + len, y); }
+    }
+  });
+  c.textAlign = 'left'; c.fillStyle = css('--L'); c.fillText('left side', 2, 7);
+  c.textAlign = 'right'; c.fillStyle = css('--R'); c.fillText('right side', cv.width - 2, 7);
+}
+function drawRaster(bytes, ticks) {
+  const cv = $('cRaster'), c = cv.getContext('2d'), rows = M.raster.length, left = 96, cols = 100;
+  const cw = (cv.width - left) / cols, rh = cv.height / rows, per = Math.ceil(rows / 8);
+  c.fillStyle = css('--panel'); c.fillRect(0, 0, cv.width, cv.height);
+  c.font = '10px ui-monospace, monospace'; c.textBaseline = 'middle'; c.textAlign = 'left';
+  let prev = '';
+  M.raster.forEach(([nm], r) => {
+    if (nm !== prev) { c.fillStyle = css('--muted'); c.fillText(nm, 2, r * rh + rh * 2); c.fillStyle = css('--rule'); c.fillRect(left, r * rh, cv.width - left, 0.5); }
+    prev = nm;
+  });
+  c.fillStyle = css('--ink');
+  for (let t = 0; t < ticks; t++) {
+    const j = cols - ticks + t;
+    for (let r = 0; r < rows; r++) if (bytes[t * per + (r >> 3)] & (128 >> (r & 7))) c.fillRect(left + j * cw, r * rh + 0.5, Math.max(1.5, cw - 1), Math.max(1, rh - 1));
+  }
+  c.fillStyle = css('--accent'); c.fillRect(cv.width - 2, 0, 2, cv.height);
+}
+async function poll() {
+  if (busy) return;
+  busy = true;
+  try {
+    if (!M) {
+      M = await (await fetch('/brain/meta.json', { cache: 'no-store' })).json();
+      $('meta').textContent = `${M.neurons.toLocaleString()} neurons · ${M.cells.toLocaleString()} T4/T5 cells mapped · eyes mode: ${M.motion}`;
+    }
+    const t = await (await fetch('/brain/tick.json', { cache: 'no-store' })).json();
+    if (t.waiting) { $('state').textContent = 'waiting for the fly to play…'; return; }
+    $('dot').className = 'dot live';
+    $('state').textContent = `${t.game} · ${t.seeking ? 'looking for control (menus)' : 'playing'} · tick ${t.seq}`;
+    if (t.seq === lastSeq) return;
+    lastSeq = t.seq;
+    const fly = +$('fly').value;
+    if (t.retina) drawRetina(await inflate(t.retina));
+    const drive = await inflate(t.drive);
+    const a = drawEye('cEyeL', true, drive, fly), b = drawEye('cEyeR', false, drive, fly);
+    $('nDriven').textContent = `${(a + b).toLocaleString()} of ${M.cells.toLocaleString()} T4/T5 cells receiving voltage now.`;
+    const tb = $('tInj').tBodies[0]; tb.textContent = '';
+    const rows = Object.entries(t.inj).sort();
+    if (!rows.length) { const tr = tb.insertRow(); tr.insertCell().textContent = 'nothing injected'; tr.insertCell(); tr.insertCell(); }
+    for (const [k, v] of rows) {
+      const tr = tb.insertRow(); tr.insertCell().textContent = k;
+      const c1 = tr.insertCell(); c1.className = 'n'; c1.textContent = v[fly].toFixed(3);
+      const c2 = tr.insertCell(); c2.className = 'n'; c2.textContent = v[2].toLocaleString();
+    }
+    drawSpk(t.spk, fly);
+    drawRaster(await inflate(t.raster), t.raster_ticks);
+    const act = Object.entries(t.acting).filter(([, v]) => v).map(([ax, v]) => `fly ${ax}: ${v}`);
+    $('acting').textContent = act.length ? act.join(' · ') : 'no readout past threshold';
+    $('pad').innerHTML = ['left', 'right', 'up', 'down', 'a', 'b', 'start'].map(k => `<span class="key2${t.pad.includes(k) ? ' on' : ''}">${k}</span>`).join('');
+  } catch (e) {
+    $('dot').className = 'dot'; $('state').textContent = 'no connection to the fly server (is connect.py running?)';
+  } finally { busy = false; }
+}
+setInterval(poll, 125);
+let shotBusy = false;                                   // fetch each frame and paint it: no reload flashes
+setInterval(async () => {
+  if (document.hidden || shotBusy) return;
+  shotBusy = true;
+  try {
+    const r = await fetch('/screen.png', { cache: 'no-store' });
+    if (r.ok) {
+      const bmp = await createImageBitmap(await r.blob());
+      const sc = $('screen').getContext('2d'); sc.imageSmoothingEnabled = false; sc.drawImage(bmp, 0, 0, 256, 240);
+      bmp.close();
+    }
+  } catch (e) {} finally { shotBusy = false; }
+}, 150);
+poll();
+</script>
+</body>
+</html>

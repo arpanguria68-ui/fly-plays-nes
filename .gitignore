@@ -1,0 +1,25 @@
+# Python
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Brain data (downloaded on first run into ~/fly-data) and learning checkpoints
+fly-data/
+*.npz
+*.feather
+
+# NES game ROMs: never committed (players bring their own, see roms/README.md)
+roms/*
+!roms/README.md
+*.nes
+*.fds
+*.unf
+*.unif
+*.nsf
+*.7z
+
+# local settings
+.env
+.env.*
+.claude/

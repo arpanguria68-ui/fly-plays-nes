@@ -1,0 +1,535 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>FLYBRAIN · NES</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:ital,wdth,wght@1,125,900&family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@400;600&family=Silkscreen&display=swap">
+<link rel="stylesheet" href="/retro.css">
+<style>
+html,body{height:100%}
+body{display:flex;flex-direction:column;overflow:hidden}
+main{flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:12px;padding:12px 16px 14px}
+.col{display:flex;flex-direction:column;gap:12px;min-height:0}
+.panel{min-height:0;display:flex;flex-direction:column}
+.panel.grow{flex:1}
+.toolbar{flex:none;display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:10px}
+.toolbar label{font:400 10px var(--label);letter-spacing:.09em;text-transform:uppercase;color:var(--ink-case);cursor:pointer;
+  background:linear-gradient(#e7e4dd,#c8c4bb);border:1px solid var(--case-edge);border-radius:3px;padding:7px 11px 6px;
+  box-shadow:0 2px 0 #77736b,inset 0 1px 0 #fff}
+.toolbar input[type=file]{display:none}
+.toolbar select{max-width:18em}
+#addmsg{font:12px var(--sans);color:var(--dim-case)}
+#addmsg.bad{color:var(--nes)}
+/* the TV: a black bezel round the picture */
+.wrap{flex:1;min-height:0;display:flex;align-items:center;justify-content:center;padding:8px}
+.game{position:relative;background:#000;border-radius:3px;overflow:hidden;width:100%;height:100%;
+  box-shadow:0 0 0 7px var(--slab),0 0 0 8px #000,0 1px 0 8px rgba(255,255,255,.5)}
+#overlay{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:5}
+.small{flex:none;display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.small .screen{flex:1}
+.row{display:grid;grid-template-columns:minmax(0,13.5em) 1fr 1fr;gap:6px;align-items:center;margin:3px 0;font-size:12px}
+.row.four{grid-template-columns:6.6em repeat(4,1fr)}
+.row span{color:var(--dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.row small{opacity:.7}
+#brainpanel .screen{flex:1;min-height:0;display:flex;padding:6px;overflow:hidden}
+#brainpanel .wrap{padding:0;min-width:0}
+.legend{flex:none;display:flex;flex-wrap:wrap;gap:2px 14px;color:var(--dim-case);font-size:11px;margin-top:8px}
+.legend i{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px;box-shadow:0 0 0 1px rgba(0,0,0,.35)}
+/* the controller: NES pad shape; amber = the fly is pressing, green = you are */
+.padrow{flex:none;display:flex;align-items:center;justify-content:center;gap:18px;margin-top:10px;flex-wrap:wrap}
+.nes{--body:#d3d1cc;--face:#26272a;--key:#141416;--nesred:#c8202a;width:384px;height:150px;flex:none;background:var(--body);
+  border-radius:10px;padding:14px 12px 12px;box-shadow:inset 0 -3px 0 #a9a7a2,0 2px 10px #0008;user-select:none;touch-action:none}
+.nes-face{position:relative;height:100%;background:var(--face);border-radius:5px;box-shadow:inset 0 0 0 2px #3a3b3f}
+.nes-brand{position:absolute;right:16px;top:9px;color:var(--nesred);font:800 13px ui-monospace,Consolas,monospace;letter-spacing:.06em}
+.nes .k{position:absolute;border:0;padding:0;margin:0;cursor:pointer;background:var(--key);color:#555;outline:none;
+  transition:transform .04s,box-shadow .08s,background .08s}
+.nes .k:focus-visible{box-shadow:0 0 0 2px var(--cyan)}
+.dpad{position:absolute;left:18px;top:24px;width:78px;height:78px}
+.dpad .k{width:26px;height:26px;font-size:10px;box-shadow:0 2px 0 #000}
+.dpad .up{left:26px;top:0;border-radius:3px 3px 0 0}.dpad .down{left:26px;top:52px;border-radius:0 0 3px 3px}
+.dpad .left{left:0;top:26px;border-radius:3px 0 0 3px}.dpad .right{left:52px;top:26px;border-radius:0 3px 3px 0}
+.dpad .hub{position:absolute;left:26px;top:26px;width:26px;height:26px;background:var(--key)}
+.dpad .hub::after{content:"";position:absolute;inset:7px;border-radius:50%;background:#1d1e21}
+.mid{position:absolute;left:118px;top:20px;width:110px;height:86px}
+.mid .stripe{height:9px;background:#8c8a86;border-radius:2px;margin-bottom:7px}
+.mid .lbl{position:absolute;top:48px;width:50px;text-align:center;color:var(--nesred);font:700 8px ui-monospace,Consolas,monospace;letter-spacing:.08em}
+.mid .k{top:62px;width:38px;height:12px;border-radius:7px;box-shadow:0 0 0 4px #bdbbb6,0 2px 0 4px #8f8d88}
+.mid .select{left:6px}.mid .start{left:66px}
+.ab{position:absolute;right:14px;top:40px;width:116px;height:66px}
+.ab .well{position:absolute;top:0;width:52px;height:52px;border-radius:5px;background:#d3d1cc;box-shadow:inset 0 -2px 0 #a9a7a2}
+.ab .k{top:5px;width:42px;height:42px;border-radius:50%;background:var(--nesred);box-shadow:0 3px 0 #7d1016}
+.ab .wb{left:0}.ab .wa{left:62px}.ab .b{left:5px}.ab .a{left:67px}
+.ab .lbl{position:absolute;top:56px;width:52px;text-align:right;color:var(--nesred);font:800 11px ui-monospace,Consolas,monospace}
+.nes .k.fly{box-shadow:0 0 0 3px var(--amber),0 0 14px var(--amber)}
+.nes .k.you{transform:translateY(2px);box-shadow:0 0 0 3px var(--green),0 0 14px var(--green)}
+.mid .k.fly{box-shadow:0 0 0 4px #bdbbb6,0 0 0 7px var(--amber),0 0 14px var(--amber)}
+.mid .k.you{box-shadow:0 0 0 4px #bdbbb6,0 0 0 7px var(--green),0 0 14px var(--green)}
+.padinfo{display:flex;flex-direction:column;gap:6px;color:var(--dim-case);font-family:var(--sans);font-size:12px;max-width:17em}
+.padinfo i{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px;vertical-align:middle}
+.padinfo label{color:var(--ink-case);cursor:pointer;display:flex;align-items:center;gap:6px}
+.padinfo #padstate{color:var(--ink-case);font:400 10px var(--label);letter-spacing:.08em;text-transform:uppercase}
+@media (max-width:900px){
+  body{overflow:auto;height:auto}
+  main{display:flex;flex-direction:column}
+  .panel.grow .wrap{flex:none;height:62vw}
+  #brainpanel .wrap{height:92vw}
+}
+@media (max-width:560px){.small{grid-template-columns:1fr}}
+@media (max-width:440px){.nes{zoom:.84}}
+</style></head><body>
+<header class="deck">
+  <a class="logo" href="/">FLYBRAIN<small>MODEL FB-166700 · NES</small></a>
+  <nav class="keys" aria-label="pages">
+    <a class="key on" href="/" aria-current="page"><i></i>PLAY</a>
+    <a class="key" href="/brain"><i></i>BRAIN</a>
+    <a class="key" href="/rewards"><i></i>REWARDS</a>
+  </nav>
+  <div class="lamp"><span class="dot" id="link"></span>POWER</div>
+  <div class="readout"><b id="linktxt">load a ROM to let the fly play</b><span id="stats">connecting...</span><span id="learn"></span></div>
+</header>
+<div class="ribs"></div>
+<main>
+  <div class="col">
+    <section class="panel grow">
+      <h2><span>Game</span><span id="watch">pick a .nes / .zip ROM</span></h2>
+      <div class="toolbar">
+        <label for="rom">Open ROM</label>
+        <input id="rom" type="file" accept=".nes,.unf,.unif,.fds,.nsf,.zip,.7z">
+        <select id="library" title="games in the ROM folder"></select>
+        <button type="button" id="loadlocal">Restart game</button>
+        <span id="addmsg" role="status" aria-live="polite"></span>
+      </div>
+      <div class="wrap" id="gamewrap"><div class="game" id="gamebox"><div id="ejs" style="width:100%;height:100%"></div><canvas id="overlay" width="256" height="240"></canvas></div></div>
+      <div class="padrow">
+        <div class="nes" id="nespad" role="group" aria-label="NES controller">
+          <div class="nes-face">
+            <div class="nes-brand">FLYBRAIN</div>
+            <div class="dpad">
+              <button type="button" class="k up" data-k="up" aria-label="Up">▲</button>
+              <button type="button" class="k left" data-k="left" aria-label="Left">◀</button>
+              <div class="hub"></div>
+              <button type="button" class="k right" data-k="right" aria-label="Right">▶</button>
+              <button type="button" class="k down" data-k="down" aria-label="Down">▼</button>
+            </div>
+            <div class="mid">
+              <div class="stripe"></div><div class="stripe"></div><div class="stripe"></div>
+              <span class="lbl" style="left:0">SELECT</span><span class="lbl" style="left:60px">START</span>
+              <button type="button" class="k select" data-k="select" aria-label="Select"></button>
+              <button type="button" class="k start" data-k="start" aria-label="Start"></button>
+            </div>
+            <div class="ab">
+              <div class="well wb"></div><div class="well wa"></div>
+              <button type="button" class="k b" data-k="b" aria-label="B"></button>
+              <button type="button" class="k a" data-k="a" aria-label="A"></button>
+              <span class="lbl" style="left:0">B</span><span class="lbl" style="left:62px">A</span>
+            </div>
+          </div>
+        </div>
+        <div class="padinfo">
+          <span><i style="background:var(--amber)"></i>the fly is pressing</span>
+          <span><i style="background:var(--green)"></i>you are pressing</span>
+          <label><input type="checkbox" id="drive"> you drive (the fly only watches)</label>
+          <span>keys: arrows · X = A · Z = B · Enter = START · Shift = SELECT</span>
+          <span id="padstate">click and hold a button</span>
+        </div>
+      </div>
+    </section>
+    <div class="small">
+      <section class="panel"><h2><span>Eyes → brain</span><span>◀ ▶ ▲ ▼</span></h2>
+        <div class="screen" id="eyes"></div>
+      </section>
+      <section class="panel"><h2><span>Brain → buttons</span><span id="mstate">descending neurons · L · R</span></h2>
+        <div class="screen" id="motor"></div>
+      </section>
+    </div>
+  </div>
+  <section class="panel" id="brainpanel"><h2><span>Nervous system</span><span id="spk"></span></h2>
+    <div class="screen"><div class="wrap" id="brainwrap"><canvas id="brain" width="900" height="900"></canvas></div></div>
+    <div class="legend"><span><i style="background:var(--amber)"></i>fired</span><span><i style="background:var(--red)"></i>looming (LPLC2)</span><span><i style="background:var(--pink)"></i>threat (LC4)</span><span><i style="background:var(--yellow)"></i>shots (LPLC1)</span><span><i style="background:var(--cyan)"></i>chase (LC10a)</span><span><i style="background:var(--green)"></i>descending neurons read (bold = over threshold)</span></div>
+  </section>
+</main>
+<script>
+const $ = (id) => document.getElementById(id);
+let S = null, base = null, glow = null, lastPad = {}, frameN = 0, playing = false;
+const brain = $("brain"), bctx = brain.getContext("2d");
+const css = (v) => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+const RETRO = { b: 0, select: 2, start: 3, up: 4, down: 5, left: 6, right: 7, a: 8 };
+
+function fit(el, wrap, ratio) {
+  const cs = getComputedStyle(wrap);
+  const W = wrap.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
+  const H = (wrap.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom)) || W / ratio;
+  let w = W, h = W / ratio;
+  if (h > H) { h = H; w = H * ratio; }
+  el.style.width = `${Math.floor(w)}px`; el.style.height = `${Math.floor(h)}px`;
+}
+function layout() {
+  fit($("gamebox"), $("gamewrap"), 4 / 3);
+  fit(brain, $("brainwrap"), 1);
+}
+addEventListener("resize", layout);
+// web fonts and the controller settle after the first layout: size again whenever the space changes
+new ResizeObserver(() => layout()).observe($("gamewrap"));
+new ResizeObserver(() => layout()).observe($("brainwrap"));
+
+function applyPad(pad) {
+  const gm = window.EJS_emulator && window.EJS_emulator.gameManager;
+  if (!gm || typeof gm.simulateInput !== "function") return;
+  for (const [name, id] of Object.entries(RETRO)) {
+    try { gm.simulateInput(0, id, pad[name] ? 1 : 0); } catch {}
+  }
+  lastPad = pad;
+}
+
+// Real NES sprites: fceumm savestates carry OAM as a "SPRA" chunk (tag, u32 LE size, 256 bytes).
+// ~0.5 ms per tick.
+const SPRA = [0x53, 0x50, 0x52, 0x41];
+let spraAt = -1, ppurAt = -1;
+const PPUR = [0x50, 0x50, 0x55, 0x52];
+// PPUCTRL bit 5: the game draws 8x16 sprites (Galaga) instead of 8x8
+function tallSprites(st) {
+  const hit = (p) => p >= 0 && PPUR.every((b, j) => st[p + j] === b);
+  if (!hit(ppurAt)) {
+    ppurAt = -1;
+    for (let p = 0; p < st.length - 12; p++) if (hit(p)) { ppurAt = p; break; }
+    if (ppurAt < 0) return false;
+  }
+  return (st[ppurAt + 8] & 0x20) !== 0;
+}
+// Game RAM (2 KB, fceumm "RAM" chunk): the server reads score and lives from it to reward learning
+let ramAt = -1;
+function ramFromState(st) {
+  const hit = (p) => p >= 0 && st[p] === 0x52 && st[p + 1] === 0x41 && st[p + 2] === 0x4d && st[p + 3] === 0
+    && st[p + 4] === 0x00 && st[p + 5] === 0x08 && st[p + 6] === 0 && st[p + 7] === 0;
+  if (!hit(ramAt)) {
+    ramAt = -1;
+    for (let p = 0; p < st.length - 2056; p++) if (hit(p)) { ramAt = p; break; }
+    if (ramAt < 0) return null;
+  }
+  const r = st.subarray(ramAt + 8, ramAt + 8 + 2048);
+  let s = "";
+  for (let i = 0; i < r.length; i += 8192) s += String.fromCharCode.apply(null, r.subarray(i, i + 8192));
+  return btoa(s);
+}
+function spritesFromState(st) {
+  const hit = (p) => p >= 0 && SPRA.every((b, j) => st[p + j] === b);
+  if (!hit(spraAt)) {
+    spraAt = -1;
+    for (let p = 0; p < st.length - 264; p++) if (hit(p)) { spraAt = p; break; }
+    if (spraAt < 0) return null;
+  }
+  const o = spraAt + 8, out = [];
+  for (let i = 0; i < 64; i++) {
+    const y = st[o + i * 4];
+    if (y < 0xEF) out.push({ i, x: st[o + i * 4 + 3], y, tile: st[o + i * 4 + 1], attr: st[o + i * 4 + 2] });
+  }
+  return out;
+}
+
+// The fly's eyes: the game picture, 128x120 grey, grabbed right after the emulator draws a
+// frame (a WebGL canvas is cleared once the frame is shown, so it must be copied then).
+const RETINA_W = 128, RETINA_H = 120;
+const retinaCanvas = document.createElement("canvas");
+retinaCanvas.width = RETINA_W; retinaCanvas.height = RETINA_H;
+const retinaCtx = retinaCanvas.getContext("2d", { willReadFrequently: true });
+let retina = null, wantRetina = true;
+const rawRAF = window.requestAnimationFrame.bind(window);
+window.requestAnimationFrame = (cb) => rawRAF((t) => {
+  cb(t);
+  if (!wantRetina || !playing) return;
+  const cv = document.querySelector("#ejs canvas");
+  if (!cv || !cv.width) return;
+  try {
+    retinaCtx.drawImage(cv, 0, 0, RETINA_W, RETINA_H);
+    const d = retinaCtx.getImageData(0, 0, RETINA_W, RETINA_H).data;
+    const g = new Uint8Array(RETINA_W * RETINA_H);
+    let lit = 0;
+    for (let i = 0, j = 0; j < g.length; i += 4, j++) { g[j] = (d[i] + d[i + 1] + d[i + 2]) / 3; lit |= g[j]; }
+    if (lit) { retina = g; wantRetina = false; }         // an all-black copy means the grab missed the frame
+  } catch { retina = null; }
+});
+function takeRetina() {
+  const g = retina; retina = null; wantRetina = true;
+  if (!g) return null;
+  let s = "";
+  for (let i = 0; i < g.length; i += 8192) s += String.fromCharCode.apply(null, g.subarray(i, i + 8192));
+  return btoa(s);
+}
+
+const CLIENT = Math.random().toString(36).slice(2);
+let busyTab = false;
+let tickBusy = false;
+async function flyTick() {
+  if (!playing || tickBusy) return;
+  tickBusy = true;
+  try {
+    let sprites = null, tall = false, ram = null;
+    const gm = window.EJS_emulator && window.EJS_emulator.gameManager;
+    if (gm) {
+      try { frameN = gm.getFrameNum(); } catch { frameN += 1; }
+      try { const st = gm.getState(); sprites = spritesFromState(st); tall = tallSprites(st); ram = ramFromState(st); } catch {}
+    }
+    sprites = sprites || [];
+    const res = await fetch("/frame", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ frame: frameN, sprites, tall, pixels: takeRetina(), ram, client: CLIENT }),
+    });
+    busyTab = res.status === 409;
+    if (res.ok) applyPad(await res.json());
+    else if (busyTab) applyPad({});
+  } catch {}
+  tickBusy = false;
+}
+
+async function dataPath() {
+  // npm's @emulatorjs/emulatorjs only ships loader.js, not cores.
+  return "https://cdn.emulatorjs.org/stable/data/";
+}
+
+async function startRom(url, name) {
+  $("watch").textContent = name || "loading";
+  $("ejs").innerHTML = "";
+  playing = false;
+  lastPad = {};
+  window.EJS_player = "#ejs";
+  window.EJS_core = "nes";
+  window.EJS_gameUrl = url;
+  window.EJS_pathtodata = await dataPath();
+  window.EJS_startOnLoaded = true;
+  window.EJS_color = "#ffb23e";
+  window.EJS_onGameStart = function () {
+    playing = true;
+    $("linktxt").textContent = "fly is playing " + (name || "NES");
+    $("link").classList.add("on");
+  };
+  const old = document.getElementById("ejs-loader");
+  if (old) old.remove();
+  const s = document.createElement("script");
+  s.id = "ejs-loader";
+  s.src = window.EJS_pathtodata + "loader.js";
+  document.body.appendChild(s);
+}
+
+// The game runs in the fly server: show its screen (the server keeps playing when this tab is hidden).
+function showServerScreen() {
+  playing = true;                                      // (draws the tracking boxes; nothing is sent from here)
+  // the server runs the game: a ROM picked here is copied into its game folder ("Add game")
+  const lbl = document.querySelector('label[for="rom"]');
+  lbl.textContent = "+ Add game";
+  lbl.title = "add your own NES game (.nes, or a .zip holding one) to the game list";
+  $("rom").accept = ".nes,.zip";
+  $("loadlocal").hidden = true;
+  // fetch each picture and paint it on a canvas, pixels kept square and sharp (an <img> whose
+  // source is swapped every few ms goes blank while each reload is in flight)
+  $("ejs").innerHTML = '<canvas id="screen" width="256" height="240" aria-label="game" style="width:100%;height:100%;image-rendering:pixelated;display:block;background:#000"></canvas>';
+  const ctx = $("screen").getContext("2d");
+  ctx.imageSmoothingEnabled = false;
+  let busy = false;
+  setInterval(async () => {
+    if (busy || document.hidden) return;
+    busy = true;
+    try {
+      const r = await fetch("/screen.png", { cache: "no-store" });
+      if (r.ok) {
+        const bmp = await createImageBitmap(await r.blob());
+        ctx.drawImage(bmp, 0, 0, 256, 240);
+        bmp.close();
+      }
+    } catch (e) {} finally { busy = false; }
+  }, 40);
+}
+
+async function switchGame(name) {
+  $("linktxt").textContent = "fly adapting to " + name + "...";
+  try {
+    const r = await (await fetch("/game", { method: "POST", headers: { "Content-Type": "application/json" },
+                                            body: JSON.stringify({ name }) })).json();
+    $("watch").textContent = `${r.game} (${r.genre}${r.ok ? "" : ", not suited"})`;
+  } catch {}
+}
+
+async function addGame(file) {
+  const msg = (text, bad) => { $("addmsg").textContent = text; $("addmsg").classList.toggle("bad", !!bad); };
+  msg(`adding ${file.name}...`);
+  let r;
+  try {
+    r = await (await fetch("/rom/upload?name=" + encodeURIComponent(file.name), { method: "POST", body: file })).json();
+  } catch { r = { ok: false, error: "no connection to the fly server" }; }
+  if (!r.ok) { msg(`can't add ${file.name}: ${r.error}`, true); return; }
+  const sel = $("library");
+  sel.textContent = "";
+  for (const name of r.library) {
+    const o = document.createElement("option");
+    o.value = o.textContent = name;
+    o.selected = name === r.name;
+    sel.appendChild(o);
+  }
+  sel.hidden = false;
+  S.rom_file = r.name;
+  msg(`added ${r.name}: the fly is switching to it`);
+  await switchGame(r.name);
+}
+
+async function init() {
+  layout();
+  S = await (await fetch("/static.json")).json();
+  $("stats").textContent = `${S.neurons.toLocaleString()} neurons · ${S.connections.toLocaleString()} connections · ${S.flies} flies on ${S.device.toUpperCase()}`;
+  const eyeRows = { loom: ["looming", "--red"], threat: ["threat", "--pink"], shot: ["shots", "--yellow"], chase: ["chase", "--cyan"] };
+  $("eyes").insertAdjacentHTML("beforeend", `<div class="row four"><span>eyes T4/T5</span><div class="bar"><i id="motL" style="background:var(--amber)"></i></div><div class="bar"><i id="motR" style="background:var(--amber)"></i></div><div></div><div></div></div>`);
+  for (const [ch, [label, color]] of Object.entries(eyeRows)) $("eyes").insertAdjacentHTML("beforeend", `<div class="row four"><span>${label}</span>${"LRUD".split("").map(s => `<div class="bar"><i id="${ch}${s}" style="background:var(${color})"></i></div>`).join("")}</div>`);
+  if (!S.local_rom) $("loadlocal").hidden = true;
+  for (const name of S.library || []) {
+    const o = document.createElement("option");
+    o.value = o.textContent = name;
+    o.selected = name === S.rom_file;
+    $("library").appendChild(o);
+  }
+  $("library").hidden = !(S.library || []).length;
+  base = document.createElement("canvas"); base.width = base.height = 900;
+  const g = base.getContext("2d"); g.fillStyle = "rgba(150,170,190,0.13)";
+  for (let i = 0; i < S.x.length; i++) g.fillRect(S.x[i] * 0.9, S.y[i] * 0.9, 1.6, 1.6);
+  glow = document.createElement("canvas"); glow.width = glow.height = 900;
+  const m = $("motor");
+  for (const [key, [neuron, action]] of Object.entries(S.labels)) {
+    m.insertAdjacentHTML("beforeend", `<div class="row"><span>${neuron} <small>${action}</small></span><div class="bar"><i id="m-${key}_L" style="background:var(--green)"></i></div><div class="bar"><i id="m-${key}_R" style="background:var(--green)"></i></div></div>`);
+  }
+  layout();
+  draw({
+    connected: false, frame: 0, sprites: [], threats: [], cmd: {},
+    spikes: [], total: 0, counts: {}, now: {}, drive: {}, ms: 0
+  });
+  new EventSource("/events").onmessage = (e) => draw(JSON.parse(e.data));
+  // Changing the game: tell the fly first (controls, its checkpoint, score search), then load it.
+  $("library").addEventListener("change", async (ev) => {
+    await switchGame(ev.target.value);
+    if (S.engine !== "server") location.reload();       // a fresh page emulator for the new game
+  });
+  $("rom").addEventListener("change", async (ev) => {
+    const file = ev.target.files && ev.target.files[0];
+    if (!file) return;
+    if (S.engine === "server") { ev.target.value = ""; return addGame(file); }
+    await switchGame(file.name);
+    startRom(URL.createObjectURL(file), file.name);
+  });
+  $("loadlocal").addEventListener("click", () => startRom("/local-rom?" + encodeURIComponent(S.rom_name), S.rom_name));
+  if (S.engine === "server") { showServerScreen(); return; }
+  for (const a of document.querySelectorAll(".keys a:not(.on)")) { a.target = "_blank"; a.rel = "noopener"; }
+  setInterval(flyTick, 50);
+  if (S.local_rom) startRom("/local-rom?" + encodeURIComponent(S.rom_name), S.rom_name);
+}
+
+function drawBrain(d) {
+  const g = glow.getContext("2d");
+  g.globalCompositeOperation = "destination-out"; g.fillStyle = "rgba(0,0,0,0.35)"; g.fillRect(0, 0, 900, 900);
+  g.globalCompositeOperation = "source-over"; g.fillStyle = css("--amber");
+  for (const i of d.spikes || []) g.fillRect(S.x[i] * 0.9 - 1, S.y[i] * 0.9 - 1, 2.4, 2.4);
+  bctx.fillStyle = css("--panel"); bctx.fillRect(0, 0, 900, 900);
+  bctx.drawImage(base, 0, 0); bctx.drawImage(glow, 0, 0);
+  const tint = (ids, color, a) => { if (a <= 0) return; bctx.globalAlpha = Math.min(1, a * 1.25); bctx.fillStyle = color;
+    for (const i of ids) bctx.fillRect(S.x[i] * 0.9 - 1.5, S.y[i] * 0.9 - 1.5, 3.2, 3.2); bctx.globalAlpha = 1; };
+  const colors = { loom: "--red", threat: "--pink", shot: "--yellow", chase: "--cyan" };
+  for (const s of "LR") for (const [ch, c] of Object.entries(colors)) tint(S.groups[ch + s] || [], css(c), (d.drive && d.drive[ch + s]) || 0);
+  bctx.font = "600 17px ui-monospace,Consolas,monospace";
+  for (const [key, [neuron]] of Object.entries(S.labels)) for (const s of "LR") {
+    const ids = S.groups[`${key}_${s}`] || []; if (!ids.length) continue;
+    const on = d.now && d.now[`${key}_${s}`];
+    for (const i of ids) {
+      const x = S.x[i] * 0.9, y = S.y[i] * 0.9;
+      bctx.beginPath(); bctx.arc(x, y, on ? 11 : 6, 0, Math.PI * 2);
+      bctx.fillStyle = on ? css("--green") : "rgba(108,240,138,0.25)"; bctx.fill();
+      bctx.strokeStyle = css("--green"); bctx.lineWidth = 1.5; bctx.stroke();
+    }
+    if (!on) continue;
+    const i = ids[0], x = S.x[i] * 0.9, y = S.y[i] * 0.9;
+    bctx.fillStyle = css("--text");
+    bctx.textAlign = s === "L" ? "right" : "left";
+    bctx.fillText(`${neuron} ${s}`, x + (s === "L" ? -15 : 15), y + 5);
+  }
+}
+
+const octx = $("overlay").getContext("2d");
+function drawOverlay(d) {
+  octx.clearRect(0, 0, 256, 240);
+  if (!playing) return;
+  const box = (o, color) => { octx.strokeStyle = color; octx.lineWidth = 1.5; octx.strokeRect(o.x - o.w / 2, o.y - o.h / 2, o.w, o.h); };
+  for (const t of d.threats || []) box(t, css("--pink"));
+  if (d.you) box(d.you, css("--green"));
+}
+
+// The controller: hold a button (mouse, touch or keys) and it is pressed in the game. Held
+// buttons are sent again every 200 ms; the server lets go of them if that stops.
+const held = {};
+let driveOn = false, padTimer = null;
+function sendPad() {
+  fetch("/pad", { method: "POST", headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ buttons: held, drive: driveOn }) }).catch(() => {});
+}
+function keepSending() {
+  const active = driveOn || Object.keys(held).length;
+  if (active && !padTimer) padTimer = setInterval(sendPad, 200);
+  if (!active && padTimer) { clearInterval(padTimer); padTimer = null; }
+}
+const MIN_PRESS = 150;                         // ms: a quick click still lasts a few game ticks
+const pressedAt = {};
+function setHeld(k, on) {
+  if (!!held[k] === on) return;
+  if (!on && performance.now() - pressedAt[k] < MIN_PRESS) {
+    setTimeout(() => { if (!pressedAt[k] || performance.now() - pressedAt[k] >= MIN_PRESS) setHeld(k, false); },
+               MIN_PRESS - (performance.now() - pressedAt[k]));
+    return;
+  }
+  if (on) { held[k] = true; pressedAt[k] = performance.now(); } else delete held[k];
+  const el = document.querySelector(`#nespad .k[data-k="${k}"]`);
+  if (el) el.classList.toggle("you", on);
+  sendPad();
+  keepSending();
+}
+for (const el of document.querySelectorAll("#nespad .k")) {
+  const k = el.dataset.k;
+  el.addEventListener("pointerdown", (e) => { e.preventDefault(); try { el.setPointerCapture(e.pointerId); } catch {} setHeld(k, true); });
+  for (const ev of ["pointerup", "pointercancel", "lostpointercapture"]) el.addEventListener(ev, () => setHeld(k, false));
+  el.addEventListener("contextmenu", (e) => e.preventDefault());
+}
+const KEYS = { ArrowUp: "up", ArrowDown: "down", ArrowLeft: "left", ArrowRight: "right", KeyX: "a", KeyZ: "b",
+               Enter: "start", ShiftLeft: "select", ShiftRight: "select" };
+addEventListener("keydown", (e) => {
+  const k = KEYS[e.code];
+  if (!k || e.target.closest("input,select,textarea")) return;
+  e.preventDefault();
+  setHeld(k, true);
+});
+addEventListener("keyup", (e) => { const k = KEYS[e.code]; if (k) setHeld(k, false); });
+addEventListener("blur", () => { for (const k of Object.keys(held)) setHeld(k, false); });
+$("drive").addEventListener("change", (e) => { driveOn = e.target.checked; sendPad(); keepSending(); });
+
+function draw(d) {
+  if (!S) return;
+  drawBrain(d);
+  $("link").classList.toggle("on", !!d.connected);
+  if (busyTab) $("linktxt").textContent = "another tab is driving the fly - close it or wait";
+  else if (!playing) $("linktxt").textContent = d.connected ? `linked · frame ${d.frame}` : "load a ROM to let the fly play";
+  else $("linktxt").textContent = `fly is playing · frame ${d.frame}`;
+  if (d.engine === "server") $("linktxt").textContent = `fly is playing (game runs in the server, ${d.fps || 0} fps) · frame ${d.frame}`;
+  if (d.engine === "server" && !S.rom_file) $("linktxt").textContent = "no game yet: press + Add game, or put NES ROMs you own in roms/";
+  const st = d.state || {};
+  const L = d.learning;
+  const G = d.game ? `${d.game.game} (${d.game.genre}${d.game.ok ? "" : ", not suited"}) · ` : "";
+  $("learn").textContent = G + (L ? `learning · ${L.samples.toLocaleString()} samples · reward ${L.reward_per_min}/min · explore ${Math.round(L.explore * 100)}% · ${L.overrides} overrides · ${L.checkpoint}`
+    : d.finding ? "learning: looking for score and lives in RAM" : "learning off");
+  $("mstate").textContent = st.seeking ? "menu / title: looking for control" : st.fleeing ? "fleeing (giant fiber)" : st.facing ? "turning to strike" : d.wander ? "wandering" : `${st.acting && (st.acting.H || st.acting.V) ? "acting: " + [st.acting.H, st.acting.V].filter(Boolean).join(" + ") : "descending neurons · L · R"}`;
+  drawOverlay(d);
+  $("spk").textContent = `${(d.total || 0).toLocaleString()} spikes/frame · ${d.ms || 0} ms`;
+  if (playing) $("watch").textContent = `${d.sprites || 0} sprites · ${d.you ? "player tracked" : "no player"} · ${(d.threats || []).length} objects`;
+  const mot = { L: 0, R: 0 };
+  for (const [k, v] of Object.entries(d.motion || {})) mot[k.slice(-1)] += v;
+  for (const s of "LR") $("mot" + s).style.width = `${Math.min(100, mot[s] / 2 * 100)}%`;
+  for (const [k, v] of Object.entries(d.drive || {})) { const el = $(k); if (el) el.style.width = `${Math.min(100, v / 0.8 * 100)}%`; }
+  for (const [g, c] of Object.entries(d.counts || {})) { const el = $("m-" + g); if (el) el.style.width = `${Math.min(100, c * 50)}%`; }
+  const cmd = d.cmd || {};
+  for (const el of document.querySelectorAll("#nespad .k")) el.classList.toggle("fly", !!cmd[el.dataset.k] && !held[el.dataset.k]);
+  const h = d.human;
+  $("padstate").textContent = h ? (h.drive ? "you are driving · the fly watches" : "you and the fly share the pad")
+    : "click and hold a button";
+}
+init();
+</script></body></html>

@@ -1,0 +1,94 @@
+/* FLYBRAIN house style, shared by every page: built like 1985 console hardware.
+   Grey plastic case, silkscreened module labels, dark recessed screens for live data,
+   hardware keys, fader sliders and segmented LED meters. */
+:root{
+  --case:#cbc7be; --case-hi:#d9d6ce; --case-lo:#a7a399; --case-edge:#8c887f;
+  --slab:#252528; --ink-case:#2a2925; --dim-case:#5f5b54; --nes:#c41f29; --led:#ff3b2f;
+  /* screens (live data) */
+  --panel:#151619; --line:#2b2c30; --text:#ebe5d7; --dim:#8f897d;
+  --ink:#ebe5d7; --muted:#8f897d; --rule:#2b2c30; --accent:#ff6a3d;
+  /* signals (the same meaning on every page) */
+  --amber:#ffb23e; --red:#ff5a5a; --cyan:#3ed8ff; --green:#6cf08a; --pink:#ff5ad2; --yellow:#ffe14d;
+  --L:#5fb4d9; --R:#ff8a65; --good:#6cf08a; --bad:#ff6b5e;
+  --label:"Silkscreen",ui-monospace,monospace;
+  --mono:"IBM Plex Mono",ui-monospace,Consolas,monospace;
+  --sans:"IBM Plex Sans",system-ui,"Segoe UI",sans-serif;
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+body{margin:0;background-color:var(--case);color:var(--ink-case);font:13px/1.45 var(--mono);counter-reset:mod;
+  background-image:radial-gradient(rgba(0,0,0,.045) 1px,transparent 1.2px);background-size:3px 3px}
+a{color:inherit}
+:focus-visible{outline:2px solid var(--nes);outline-offset:2px}
+
+/* ---------------------------------------------------------------- the deck: logo, page keys, power lamp */
+.deck{display:flex;align-items:center;flex-wrap:wrap;gap:10px 22px;padding:12px 16px 10px}
+.logo{display:block;text-decoration:none;color:var(--nes);font:italic 900 27px/0.9 "Archivo",var(--sans);font-stretch:125%;letter-spacing:-.01em;white-space:nowrap}
+.logo small{display:block;margin-top:4px;font:400 9px var(--label);font-style:normal;letter-spacing:.14em;color:var(--dim-case)}
+.keys{display:flex;gap:8px;flex-wrap:wrap}
+.key{display:flex;align-items:center;gap:8px;padding:8px 13px 7px;border-radius:3px;text-decoration:none;
+  font:400 10px var(--label);letter-spacing:.12em;color:#d6d1c6;background:var(--slab);
+  box-shadow:0 2px 0 #000,inset 0 1px 0 rgba(255,255,255,.09)}
+.key i{width:6px;height:6px;border-radius:50%;background:#401c1a;box-shadow:inset 0 1px 1px #000}
+.key.on i{background:var(--led);box-shadow:0 0 6px var(--led)}
+.key:hover{color:#fff}
+.key:active{transform:translateY(2px);box-shadow:0 0 0 #000}
+.lamp{display:flex;align-items:center;gap:7px;font:400 9px var(--label);letter-spacing:.14em;color:var(--dim-case)}
+.dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:#4a201d;box-shadow:inset 0 1px 1px #000;vertical-align:middle}
+.dot.on,.dot.live{background:var(--led);box-shadow:0 0 8px var(--led),inset 0 -1px 1px rgba(0,0,0,.3)}
+.readout{font:12px var(--mono);color:var(--dim-case);display:flex;flex-wrap:wrap;gap:2px 16px}
+.readout b{color:var(--ink-case);font-weight:600}
+.ribs{height:12px;flex:none;border-top:1px solid #0b0b0c;border-bottom:1px solid var(--case-edge);
+  background:repeating-linear-gradient(180deg,#2c2c30 0 2px,#161618 2px 4px)}
+
+/* ---------------------------------------------------------------- modules: a raised plate, a silkscreen label */
+.panel,.card{background:var(--case-hi);border:1px solid var(--case-lo);border-radius:4px;padding:10px;min-width:0;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.55),0 1px 0 rgba(255,255,255,.4),0 2px 3px rgba(0,0,0,.12)}
+.panel>h2,.card>h2{counter-increment:mod;display:flex;align-items:center;gap:8px;margin:0 0 8px;white-space:nowrap;overflow:hidden;
+  font:400 10px var(--label);letter-spacing:.11em;text-transform:uppercase;color:var(--ink-case)}
+.panel>h2::before,.card>h2::before{content:counter(mod,decimal-leading-zero);flex:none;color:#f3eee4;background:var(--nes);
+  padding:2px 4px 1px;border-radius:2px;letter-spacing:.04em}
+.panel>h2>span+span,.card>h2>span+span{margin-left:auto;color:var(--dim-case);overflow:hidden;text-overflow:ellipsis}
+.panel p,.card p{font:13px/1.45 var(--sans);color:var(--dim-case);margin:0 0 8px}
+code{font:12px var(--mono);background:rgba(0,0,0,.07);padding:0 3px;border-radius:2px}
+
+/* screens: where live data shows, dark and recessed into the plate */
+.screen{background:var(--panel);color:var(--text);border:1px solid #0b0b0d;border-radius:3px;padding:8px;
+  box-shadow:inset 0 2px 4px rgba(0,0,0,.8),0 1px 0 rgba(255,255,255,.6)}
+.screen code{background:rgba(255,255,255,.08)}
+
+/* ---------------------------------------------------------------- controls */
+button:not(.k){font:400 10px var(--label);letter-spacing:.09em;text-transform:uppercase;color:var(--ink-case);cursor:pointer;
+  background:linear-gradient(#e7e4dd,#c8c4bb);border:1px solid var(--case-edge);border-radius:3px;padding:7px 11px 6px;
+  box-shadow:0 2px 0 #77736b,inset 0 1px 0 #fff}
+button:not(.k):active{transform:translateY(2px);box-shadow:0 0 0 #77736b,inset 0 1px 0 #fff}
+select,input[type=number],input[type=text],input:not([type]){font:12px var(--mono);color:var(--text);background:#1a1b1e;
+  border:1px solid #0b0b0d;border-radius:3px;padding:4px 6px;box-shadow:inset 0 1px 2px #000,0 1px 0 rgba(255,255,255,.5)}
+input[type=checkbox]{accent-color:var(--nes);width:15px;height:15px}
+/* faders */
+input[type=range]{-webkit-appearance:none;appearance:none;background:transparent;height:22px;margin:0;cursor:pointer}
+input[type=range]::-webkit-slider-runnable-track{height:6px;background:#1a1b1e;border-radius:3px;box-shadow:inset 0 1px 2px #000,0 1px 0 rgba(255,255,255,.5)}
+input[type=range]::-moz-range-track{height:6px;background:#1a1b1e;border-radius:3px;box-shadow:inset 0 1px 2px #000}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:12px;height:20px;margin-top:-7px;border-radius:2px;
+  background:linear-gradient(90deg,#e1ddd4 0 42%,#2a2a2a 42% 58%,#e1ddd4 58%);border:1px solid #6b675f;box-shadow:0 2px 0 #6b675f}
+input[type=range]::-moz-range-thumb{width:10px;height:18px;border-radius:2px;
+  background:linear-gradient(90deg,#e1ddd4 0 42%,#2a2a2a 42% 58%,#e1ddd4 58%);border:1px solid #6b675f;box-shadow:0 2px 0 #6b675f}
+
+/* LED meters: segmented, like a VU strip */
+.bar,.meter{height:10px;background:#0d0e10;border:1px solid #000;border-radius:2px;overflow:hidden}
+.bar i,.meter i{display:block;height:100%;width:0;
+  -webkit-mask:repeating-linear-gradient(90deg,#000 0 5px,transparent 5px 7px);mask:repeating-linear-gradient(90deg,#000 0 5px,transparent 5px 7px)}
+
+/* caution sticker */
+.advice{position:relative;background:#f0c02f;color:#1b1a17;border-radius:3px;padding:9px 12px 9px 28px;font:13px var(--sans);
+  box-shadow:0 1px 0 rgba(255,255,255,.5),0 2px 3px rgba(0,0,0,.18)}
+.advice::before{content:"";position:absolute;left:0;top:0;bottom:0;width:14px;border-radius:3px 0 0 3px;
+  background:repeating-linear-gradient(-45deg,#1b1a17 0 6px,#f0c02f 6px 12px)}
+
+/* tables */
+table{width:100%;border-collapse:collapse;font:12px var(--mono);font-variant-numeric:tabular-nums}
+td,th{padding:4px 6px;border-bottom:1px solid var(--rule);text-align:left}
+th{color:var(--muted);font:400 9px var(--label);letter-spacing:.1em;text-transform:uppercase}
+td.n,th.n{text-align:right}
+
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}

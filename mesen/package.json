@@ -1,0 +1,8 @@
+{
+  "name": "flybrain-emulatorjs",
+  "private": true,
+  "description": "Local EmulatorJS files for the fly brain NES dashboard",
+  "dependencies": {
+    "@emulatorjs/emulatorjs": "^4.2.3"
+  }
+}

@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FLYBRAIN · Rewards</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:ital,wdth,wght@1,125,900&family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@400;600&family=Silkscreen&display=swap">
+<link rel="stylesheet" href="/retro.css">
+<style>
+.wrap{max-width:1140px;margin:0 auto;padding:16px 16px 40px}
+.intro h1{margin:0;font:italic 900 22px/1 "Archivo",var(--sans);font-stretch:125%;color:var(--ink-case)}
+.intro p{margin:6px 0 0;max-width:80ch;font:13px/1.5 var(--sans);color:var(--dim-case)}
+.status{font:12px var(--mono);margin:12px 0;color:var(--ink-case);font-weight:600}
+.grid{display:grid;gap:12px;grid-template-columns:minmax(0,3fr) minmax(0,2fr);align-items:start}
+@media (max-width:820px){.grid{grid-template-columns:minmax(0,1fr)}}
+.stack{display:flex;flex-direction:column;gap:12px;min-width:0}
+.ev{display:grid;grid-template-columns:minmax(0,1fr) 150px 64px 96px;gap:10px;align-items:center;padding:7px 0;border-bottom:1px dashed var(--case-lo)}
+.ev:last-child{border-bottom:0}
+.ev .name{font:600 13px var(--sans)}.ev .unit{font:11px var(--mono);color:var(--dim-case)}
+.ev input[type=number]{width:64px}
+.live{font:12px var(--mono);text-align:right;font-variant-numeric:tabular-nums;color:var(--muted);background:var(--panel);
+  border-radius:2px;padding:3px 6px;box-shadow:inset 0 1px 2px #000}
+.live.pos{color:var(--good)}.live.neg{color:var(--bad)}
+.pos{color:var(--good)}.neg{color:var(--bad)}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:10px}
+.rule{display:grid;grid-template-columns:minmax(0,1fr) 84px 96px 64px 34px;gap:6px;margin-top:6px}
+.rule input,.rule select{min-width:0}
+.log{font:12px var(--mono);max-height:calc(100vh - 120px);overflow:auto}
+.grid>.card:last-child{position:sticky;top:12px}
+.log div{display:grid;grid-template-columns:70px 60px minmax(0,1fr);gap:8px;padding:3px 0;border-bottom:1px solid var(--rule)}
+.taste{display:flex;gap:10px;align-items:center;font:12px var(--mono);margin-top:8px}
+.taste span{color:var(--dim-case)}
+.meter{flex:1}
+.saved{font:400 10px var(--label);letter-spacing:.08em;color:var(--dim-case)}
+.err{font:12px var(--mono);color:var(--nes)}
+.advice{margin:0 0 12px}
+.advice div{display:flex;gap:10px;align-items:center;justify-content:space-between;padding:3px 0}
+.sugg{display:grid;grid-template-columns:70px 70px minmax(0,1fr) auto;gap:8px;align-items:center;font:12px var(--mono);padding:5px 0;border-bottom:1px dashed var(--case-lo)}
+.stim{display:grid;grid-template-columns:minmax(0,1fr) 150px 52px;gap:10px;align-items:center;padding:6px 0;border-bottom:1px dashed var(--case-lo)}
+.stim span:first-child{font:13px var(--sans)}
+.stim span:last-child{font:12px var(--mono);text-align:right;color:var(--ink-case)}
+label.row{font:13px var(--sans)}
+</style>
+</head>
+<body>
+<header class="deck">
+  <a class="logo" href="/">FLYBRAIN<small>MODEL FB-166700 · NES</small></a>
+  <nav class="keys" aria-label="pages">
+    <a class="key" href="/"><i></i>PLAY</a>
+    <a class="key" href="/brain"><i></i>BRAIN</a>
+    <a class="key on" href="/rewards" aria-current="page"><i></i>REWARDS</a>
+  </nav>
+  
+</header>
+<div class="ribs"></div>
+<div class="wrap">
+<div class="intro"><h1>What the fly wants</h1>
+<p>What the fly is rewarded and punished for, the way food and pain teach an animal. Events are detected the same way in every game from the score and lives in RAM and the objects on screen. Set a weight to 0 to switch an event off, negative to punish it. Changes apply to the running fly at once and are saved for this game.</p></div>
+<div class="status" id="status">connecting…</div>
+<div class="advice" id="advice" hidden></div>
+<div class="grid">
+ <div class="stack">
+ <div class="card">
+  <h2>Events and weights</h2>
+  <p>Reward per event = weight × amount. The right column shows the last minute: how often it happened and the reward it gave.</p>
+  <div id="events"></div>
+  <div class="row"><button id="reset" type="button">Reset to genre defaults</button><span class="saved" id="saved"></span></div>
+ </div>
+ <div class="card">
+  <h2>How strongly each sense drives the brain</h2>
+  <p>Gain × the calibrated level, for this game. Above 1 the fly reacts to that sense more readily (jumpier), below 1 it pays it less attention, 0 shuts it off.</p>
+  <div id="stims"></div>
+ </div>
+ <div class="card">
+  <h2>Taste it</h2>
+  <p>Let rewards stimulate sweet-taste (LB3, LB2d) and reward dopamine (PAM) neurons, punishments bitter-taste (LB1) and punishment dopamine (PPL1), as food and pain do in a real fly. The brain has no plasticity here, so this changes what it does in the moment; the learning itself stays in the learner.</p>
+  <label class="row" style="margin-top:0"><input type="checkbox" id="taste"> let the fly taste its rewards</label>
+  <div class="taste"><span style="width:52px">sweet</span><div class="meter"><i id="mSweet" style="background:var(--good)"></i></div></div>
+  <div class="taste"><span style="width:52px">bitter</span><div class="meter"><i id="mBitter" style="background:var(--bad)"></i></div></div>
+ </div>
+ <div class="card">
+  <h2>Your own rules (game memory)</h2>
+  <p>Reward a byte of the game's RAM (0x000–0x7FF) going up, down, or changing: coins, health, keys, power-ups. Find addresses in a RAM map for the game.</p>
+  <div id="suggestions"></div>
+  <div id="rules"></div>
+  <div class="row"><button id="addRule" type="button">Add rule</button><button id="saveRules" type="button">Save rules</button><span class="err" id="ruleErr"></span></div>
+ </div>
+ </div>
+ <div class="card">
+  <h2>What the fly just felt</h2>
+  <p>Newest first. Small steady ones (danger, explore, survive) appear only when large; the totals on the left count them all.</p>
+  <div class="screen log" id="log"></div>
+ </div>
+</div>
+</div>
+<script>
+const $ = id => document.getElementById(id);
+const esc = v => String(v ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+let S = null, built = false, saveTimer = null;
+async function post(body) {
+  const r = await fetch('/rewards/config', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+  S = await r.json(); $('saved').textContent = 'Saved'; setTimeout(() => $('saved').textContent = '', 1500);
+  build(true);
+}
+function build(force) {
+  if (built && !force) return;
+  built = true;
+  const box = $('events'); box.textContent = '';
+  for (const [k, ev] of Object.entries(S.events)) {
+    const w = S.config.weights[k] ?? 0;
+    const row = document.createElement('div'); row.className = 'ev';
+    row.innerHTML = `<div><div class="name">${ev.label}</div><div class="unit">${ev.unit}</div></div>
+      <input type="range" min="-10" max="10" step="0.5" value="${Math.max(-10, Math.min(10, w))}" aria-label="${ev.label} weight" id="r_${k}">
+      <input type="number" step="0.5" min="-20" max="20" value="${w}" aria-label="${ev.label} weight value" id="n_${k}">
+      <div class="live" id="l_${k}">–</div>`;
+    box.appendChild(row);
+    const r = row.querySelector('input[type=range]'), n = row.querySelector('input[type=number]');
+    const send = v => { clearTimeout(saveTimer); saveTimer = setTimeout(() => post({ weights: { [k]: v } }), 250); };
+    r.oninput = () => { n.value = r.value; send(+r.value); };
+    n.onchange = () => { const v = Math.max(-20, Math.min(20, +n.value || 0)); n.value = v; r.value = Math.max(-10, Math.min(10, v)); send(v); };
+  }
+  $('taste').checked = !!S.config.taste;
+  const st = $('stims'); st.textContent = '';
+  for (const [k, label] of Object.entries(S.stimulus || {})) {
+    const g = (S.config.stimulus || {})[k] ?? 1;
+    const row = document.createElement('div'); row.className = 'stim';
+    row.innerHTML = `<span>${esc(label)}</span><input type="range" min="0" max="${S.stim_max}" step="0.1" value="${g}" aria-label="${esc(label)} gain" id="s_${k}"><span id="sv_${k}">${(+g).toFixed(1)}×</span>`;
+    st.appendChild(row);
+    const r = row.querySelector('input');
+    r.oninput = () => { $('sv_' + k).textContent = (+r.value).toFixed(1) + '×'; clearTimeout(saveTimer); saveTimer = setTimeout(() => post({ stimulus: { [k]: +r.value } }), 250); };
+  }
+  const rules = $('rules'); rules.textContent = '';
+  for (const rule of S.config.ram_rules) addRule(rule);
+}
+function addRule(rule = { name: '', addr: '', when: 'up', weight: 1 }) {
+  const d = document.createElement('div'); d.className = 'rule';
+  d.innerHTML = `<input placeholder="coins" aria-label="rule name" value="${esc(rule.name)}">
+    <input placeholder="0x75E" aria-label="RAM address" value="${esc(rule.addr)}">
+    <select aria-label="when"><option value="up">goes up</option><option value="down">goes down</option><option value="change">changes</option></select>
+    <input type="number" step="0.5" aria-label="weight" value="${rule.weight ?? 1}">
+    <button type="button" aria-label="remove rule">×</button>`;
+  d.querySelector('select').value = rule.when || 'up';
+  d.querySelector('button').onclick = () => d.remove();
+  $('rules').appendChild(d);
+}
+$('addRule').onclick = () => addRule();
+$('saveRules').onclick = () => {
+  const rules = [...document.querySelectorAll('#rules .rule')].map(d => { const i = d.querySelectorAll('input'); return { name: i[0].value.trim(), addr: i[1].value.trim(), when: d.querySelector('select').value, weight: +i[2].value }; });
+  const bad = rules.find(r => !/^(0x[0-9a-f]{1,3}|\d{1,4})$/i.test(r.addr) || parseInt(r.addr) > 0x7ff);
+  if (bad) { $('ruleErr').textContent = `Address "${bad.addr}" isn't valid. Use 0x000–0x7FF.`; return; }
+  $('ruleErr').textContent = '';
+  post({ ram_rules: rules });
+};
+$('taste').onchange = e => post({ taste: e.target.checked });
+$('reset').onclick = () => post({ reset: true });
+async function poll() {
+  try {
+    S = await (await fetch('/rewards/state.json', { cache: 'no-store' })).json();
+    build(false);
+    const L = S.learning;
+    $('status').textContent = `${S.game} (${S.genre}) · ` + (S.searching ? 'still finding score and lives in RAM: rewards start after that' :
+      L ? `learning · ${L.samples.toLocaleString()} samples · reward ${L.reward_per_min}/min` : 'not learning (started with --no-learn)') + (S.seeking ? ' · in menus' : '');
+    for (const k of Object.keys(S.events)) {
+      const v = (S.last_minute || {})[k], el = $('l_' + k); if (!el) continue;
+      el.textContent = v ? `${v.count}× ${v.reward > 0 ? '+' : ''}${v.reward}` : '–';
+      el.className = 'live ' + (v ? (v.reward > 0 ? 'pos' : 'neg') : '');
+    }
+    const log = $('log'); log.textContent = '';
+    for (const e of (S.log || [])) {
+      const d = document.createElement('div');
+      d.innerHTML = `<span>${esc(e.event)}</span><span class="${e.reward > 0 ? 'pos' : 'neg'}">${e.reward > 0 ? '+' : ''}${e.reward}</span><span>${esc(e.note)}</span>`;
+      log.appendChild(d);
+    }
+    if (!(S.log || []).length) log.textContent = 'Nothing yet. Rewards appear once the fly is playing and learning.';
+    const adv = $('advice'), A = S.advice || [];
+    adv.hidden = !A.length;
+    adv.innerHTML = A.map((a, j) => `<div><span>${esc(a.message)}</span>${a.weight === null ? '' : `<button type="button" data-j="${j}">Set ${esc(a.event)} to ${a.weight}</button>`}</div>`).join('');
+    adv.querySelectorAll('button').forEach(b => b.onclick = () => { const a = A[+b.dataset.j]; post({ weights: { [a.event]: a.weight } }); });
+    const sg = $('suggestions'), G = (S.suggestions || []).filter(g => !(S.config.ram_rules || []).some(r => r.addr.toLowerCase() === g.addr.toLowerCase()));
+    sg.innerHTML = G.length ? '<p style="margin:6px 0">Candidates found in this game\'s memory while the fly played. They are guesses from how each byte behaved: check one against a RAM map or by watching the log before relying on it.</p>' + G.map((g, j) =>
+      `<div class="sugg"><span>${esc(g.addr)}</span><span>${esc(g.kind)}</span><span>${esc(g.why)} · values ${esc(g.values.join(', '))}</span><button type="button" data-j="${j}">Add ${g.weight > 0 ? '+' : ''}${g.weight} when ${esc(g.when)}</button></div>`).join('') : '';
+    sg.querySelectorAll('button').forEach(b => b.onclick = () => {
+      const g = G[+b.dataset.j];
+      post({ ram_rules: [...(S.config.ram_rules || []), { name: g.kind === 'health' ? `health ${g.addr}` : `counter ${g.addr}`, addr: g.addr, when: g.when, weight: g.weight }] });
+    });
+    $('mSweet').style.width = ((S.taste?.sweet || 0) * 100) + '%';
+    $('mBitter').style.width = ((S.taste?.bitter || 0) * 100) + '%';
+  } catch (e) { $('status').textContent = 'no connection to the fly server (is connect.py running?)'; }
+}
+setInterval(poll, 500); poll();
+</script>
+</body>
+</html>
