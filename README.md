@@ -16,18 +16,76 @@ brain itself stays frozen: no training inside it.
 
 **No games are included.** You bring NES ROMs you own (see [Getting games](#getting-games)).
 
-![The Play page: the game on a TV, the NES controller, the fly's eyes and buttons, its nervous system firing](docs/play.jpg)
+## Screenshots
 
-## What you get
+All taken from the running app while the fly played Galaga.
 
-* **Play** (`http://127.0.0.1:8777/`): the game, an NES controller showing what the fly presses
-  (amber) and what you press (green), its eyes, its buttons and its whole nervous system firing.
-  Click the pad (or use the keyboard) to play along, or tick *you drive* to take over.
-* **Brain** (`/brain`): exactly what goes into the connectome each tick (the retina image, the
-  voltage into every T4/T5 cell) and the spikes that come back.
-* **Rewards** (`/rewards`): what the fly is rewarded and punished for, live. Change the weights,
-  how strongly each sense drives the brain, let it "taste" rewards, or add your own RAM rules.
-* The game runs inside the server, so it keeps playing when the tab is hidden or closed.
+### Play: the fly at the controls
+
+![The Play page: Galaga on a TV with the fly's ship tracked in green, the NES controller, the fly's eyes and buttons, and its whole nervous system firing](docs/play.jpg)
+
+The game on a TV; boxes show what the fly tracks (green: the ship it controls, pink: enemies and
+shots). Below it, **02 Eyes → brain** is how strongly each sense is driven and **03 Brain →
+buttons** is the descending neurons that press the pad. On the right, **04 Nervous system**: all
+166,700 neurons, amber where they fire this tick, green where the fly's output neurons are read.
+
+### The controller: see what the fly presses, or play along
+
+![The NES controller: the left arrow glows amber because the fly's neurons are pressing it](docs/controller.jpg)
+
+A button glows **amber** when the fly's neurons press it, **green** when you do. Click and hold
+(or use the keys: arrows, X = A, Z = B, Enter = START, Shift = SELECT) to press with it. A
+direction you hold beats the fly's opposite one; tick *you drive* and only your buttons count.
+
+<table>
+<tr>
+<td width="50%" valign="top">
+
+### Brain: what goes in, what comes out
+
+<a href="docs/brain.jpg"><img src="docs/brain.jpg" alt="The Brain page: game screen, the retina image given to the fly, voltage into its left and right T4/T5 motion detectors, everything injected this tick, spikes per cell type"></a>
+
+Exactly what the fly code hands to the connectome each tick: the retina image, the voltage into
+each of 13,581 T4/T5 motion-detector cells (colour = the direction it prefers), every input set,
+and the spikes per cell type that come back. Nothing on this page is simulated for show.
+
+</td>
+<td width="50%" valign="top">
+
+### Rewards: what the fly wants
+
+<a href="docs/rewards.jpg"><img src="docs/rewards.jpg" alt="The Rewards page: event weights with live counts, a caution tip, and the log of what the fly just felt"></a>
+
+Food (score), kills, relief, explore, danger, pain: weights you can change live, with what each
+paid in the last minute. The log shows what the fly just felt. Also: how strongly each sense
+drives the brain, "taste" (sweet/bitter neurons), and your own RAM rules.
+
+</td>
+</tr>
+</table>
+
+<table>
+<tr>
+<td width="34%" valign="top">
+
+### On a phone
+
+<img src="docs/mobile.jpg" alt="The Play page on a phone: the game, the controller and the status lines stacked">
+
+</td>
+<td width="66%" valign="top">
+
+### Also
+
+* The game runs **inside the server**, so it keeps playing when the tab is hidden or closed.
+* **+ Add game** puts a ROM you own into `roms/` from the page and switches to it.
+* Learning is saved **per game** and resumes next time.
+* Every page shares one look, built like 1985 console hardware: grey case, numbered modules,
+  dark screens for live data, segmented LED meters.
+
+</td>
+</tr>
+</table>
 
 ## Requirements
 
@@ -122,7 +180,7 @@ Learning is saved per game in `mesen/checkpoints/` (ignored by git) and resumes 
 | `flybrain/` | the connectome simulation (from [fly.ai](https://github.com/alextitonis/fly.ai)) |
 | `roms/` | your games (not in git) |
 | `tests/` | `python -m pytest tests -q` (no GPU, brain data or games needed) |
-| `docs/` | screenshot and demo videos |
+| `docs/` | screenshots, demo GIF and launch video |
 
 ## Credits
 
