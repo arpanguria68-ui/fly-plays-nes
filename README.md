@@ -70,7 +70,7 @@ drives the brain, "taste" (sweet/bitter neurons), and your own RAM rules.
 
 ### On a phone
 
-<img src="docs/mobile.jpg" alt="The Play page on a phone: the game, the controller and the status lines stacked">
+<img src="docs/mobile.jpg" width="240" alt="The Play page on a phone: the game, the controller and the status lines stacked">
 
 </td>
 <td width="66%" valign="top">
