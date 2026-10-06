@@ -194,5 +194,5 @@ NES emulation by [cynes](https://github.com/Youlixx/cynes) (MIT).
 **Trademarks and game content.** Nintendo, NES and Super Mario Bros. are trademarks of Nintendo; Galaga
 is a trademark of Bandai Namco Entertainment; other game titles belong to their owners. This is a
 non-commercial research project, not affiliated with or endorsed by any of them. The screenshots and
-videos show short gameplay excerpts recorded from cartridges' games to demonstrate the research. No
-game files are included, linked or shared: use only games you own.
+videos show short gameplay excerpts to demonstrate the research. No game files are included, linked
+or shared: use only games you own.
