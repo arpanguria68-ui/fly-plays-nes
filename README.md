@@ -189,5 +189,10 @@ Learning is saved per game in `mesen/checkpoints/` (ignored by git) and resumes 
 The connectome simulation (`flybrain/`) is from [fly.ai](https://github.com/alextitonis/fly.ai) by
 alextitonis (MIT license); its full project, with more tasks for the same brain, lives there. The
 brain data it downloads is built from the [MaleCNS v1.0 connectome](https://male-cns.janelia.org).
-NES emulation by [cynes](https://github.com/Youlixx/cynes) (MIT). Nintendo, NES and game titles are
-trademarks of their owners; this project is not affiliated with or endorsed by them.
+NES emulation by [cynes](https://github.com/Youlixx/cynes) (MIT).
+
+**Trademarks and game content.** Nintendo, NES and Super Mario Bros. are trademarks of Nintendo; Galaga
+is a trademark of Bandai Namco Entertainment; other game titles belong to their owners. This is a
+non-commercial research project, not affiliated with or endorsed by any of them. The screenshots and
+videos show short gameplay excerpts recorded from cartridges' games to demonstrate the research. No
+game files are included, linked or shared: use only games you own.
