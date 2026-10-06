@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FLYBRAIN · NES: a real fly brain plays NES games</title>
+<meta name="description" content="The whole nervous system of a fruit fly (166,700 neurons, 25.6 million connections) plays NES games live: it sees the game, its neurons press the buttons, and you can grab the controller.">
+<meta property="og:title" content="FLYBRAIN · NES: a real fruit fly brain plays NES games">
+<meta property="og:description" content="166,700 neurons from a real fly's connectome see the game and press the buttons, live on one GPU. Bring your own ROMs.">
+<meta property="og:image" content="https://arpanguria68-ui.github.io/fly-plays-nes/poster.jpg">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23c41f29'/%3E%3Crect x='7' y='12' width='18' height='8' rx='2' fill='%23ebe5d7'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:ital,wdth,wght@1,100,900;1,125,900&family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@400;600&family=Silkscreen&display=swap">
+<link rel="stylesheet" href="site.css">
+</head>
+<body>
+<header class="deck">
+  <div class="wrap">
+    <a class="logo" href="#top">FLYBRAIN<small>NES &middot; FB-166700</small></a>
+    <nav class="keys" aria-label="sections">
+      <a class="key" href="#how"><i></i>How</a>
+      <a class="key" href="#app"><i></i>The app</a>
+      <a class="key" href="#found"><i></i>Results</a>
+      <a class="key" href="#start"><i></i>Run it</a>
+      <a class="key red" href="https://github.com/arpanguria68-ui/fly-plays-nes"><i></i>GitHub</a>
+    </nav>
+  </div>
+</header>
+<div class="ribs"></div>
+
+<main id="top">
+<div class="wrap">
+  <div class="hero">
+    <div class="eyebrow"><b>open source</b> a connectome at the controls</div>
+    <h1>A real fruit fly brain <em>plays NES games.</em></h1>
+    <p class="lede">The whole nervous system of an adult fruit fly, 166,700 neurons wired from an
+      electron-microscope map, runs live on one GPU. It sees the game through its motion and object detectors,
+      its descending neurons press the buttons, and you can grab the controller and play along.</p>
+    <div class="cta">
+      <a class="btn red" href="https://github.com/arpanguria68-ui/fly-plays-nes">View on GitHub</a>
+      <a class="btn" href="#start">Run it yourself</a>
+      <a class="btn" href="https://github.com/arpanguria68-ui/fly-plays-nes/releases/tag/v0.1.0">Videos &amp; release</a>
+    </div>
+    <div class="tv">
+      <video src="flybrain_launch.mp4" poster="poster.jpg" controls preload="none" playsinline aria-label="20-second launch video: a fruit fly plays Galaga"></video>
+    </div>
+    <p class="muted" style="font-size:15px;margin-top:12px">The 20-second launch video, recorded from the running app. A 2-minute walkthrough of rewards and senses is on the <a href="https://github.com/arpanguria68-ui/fly-plays-nes/releases/tag/v0.1.0">release page</a>.</p>
+    <div class="stats">
+      <div class="stat"><b>166,700</b><span>neurons, the whole central nervous system (MaleCNS)</span></div>
+      <div class="stat"><b>25.6 M</b><span>connections, mapped with an electron microscope</span></div>
+      <div class="stat"><b>20 / s</b><span>ticks: see, think, press, every 50 ms</span></div>
+      <div class="stat"><b>0</b><span>ROMs included: you bring games you own</span></div>
+    </div>
+  </div>
+
+  <section id="how">
+    <div class="mod"><b>01</b> how it works</div>
+    <h2>From the screen to the buttons</h2>
+    <p class="muted">The brain itself is frozen: no training inside it. A small learner on top rewards what scores
+      and punishes losing a life, the way food and pain teach an animal.</p>
+    <div class="flow" role="list">
+      <div class="node ours" role="listitem"><div class="n">the game</div><b>NES emulator</b><span>runs in the server, keeps playing with the tab closed</span></div>
+      <div class="arrow" aria-hidden="true">&rarr;</div>
+      <div class="node ours" role="listitem"><div class="n">the picture</div><b>motion &amp; objects</b><span>turned into signals for the fly's own detector neurons</span></div>
+      <div class="arrow" aria-hidden="true">&rarr;</div>
+      <div class="node fly" role="listitem"><div class="n">its eyes</div><b>T4/T5, LC10a, LPLC2</b><span>13,581 motion detectors and object detectors</span></div>
+      <div class="arrow" aria-hidden="true">&rarr;</div>
+      <div class="node fly" role="listitem"><div class="n">the brain</div><b>166,700 neurons</b><span>a spiking simulation of the whole connectome</span></div>
+      <div class="arrow" aria-hidden="true">&rarr;</div>
+      <div class="node fly" role="listitem"><div class="n">its output</div><b>descending neurons</b><span>the brain's cables to the body press the pad</span></div>
+      <div class="arrow" aria-hidden="true">&rarr;</div>
+      <div class="node ours" role="listitem"><div class="n">on top</div><b>reward learner</b><span>score = food, lost life = pain, saved per game</span></div>
+    </div>
+    <div class="legend"><span><i style="background:var(--amber)"></i>this program</span><span><i style="background:var(--green)"></i>the fly's own wiring</span></div>
+  </section>
+
+  <section id="app">
+    <div class="mod"><b>02</b> the app</div>
+    <h2>Watch it play, see inside, take the controller</h2>
+    <figure class="plate"><img class="shot" src="play.jpg" alt="The Play page: Galaga on a TV with the fly's ship tracked in green, the NES controller, the fly's eyes and buttons, its whole nervous system firing" loading="lazy">
+      <figcaption><b>Play.</b> The game on a TV; green marks the ship the fly controls, pink the enemies and shots.
+        Below: how strongly each sense drives the brain, and the descending neurons that press the pad. Right: all
+        166,700 neurons, amber where they fire this tick.</figcaption></figure>
+    <div class="grid2" style="margin-top:18px">
+      <figure class="plate"><img class="shot" src="brain.jpg" alt="The Brain page: the retina image, voltage into left and right T4/T5 motion detectors, every input set this tick, spikes per cell type" loading="lazy">
+        <figcaption><b>Brain.</b> Exactly what goes into the connectome each tick and the spikes that come back. Nothing on it is simulated for show.</figcaption></figure>
+      <figure class="plate"><img class="shot" src="rewards.jpg" alt="The Rewards page: event weights with live counts and the log of what the fly just felt" loading="lazy">
+        <figcaption><b>Rewards.</b> Food, kills, relief, explore, danger, pain: weights you change live, with what each paid in the last minute.</figcaption></figure>
+      <figure class="plate"><img class="shot" src="controller.jpg" alt="The NES controller: the left arrow glows amber because the fly's neurons press it" loading="lazy">
+        <figcaption><b>The controller.</b> A button glows amber when the fly's neurons press it, green when you do. Click, touch or use the keys to play along.</figcaption></figure>
+      <div class="plate" style="display:flex;gap:16px;align-items:flex-start">
+        <img src="mobile.jpg" alt="The Play page on a phone" style="width:42%;border-radius:4px;border:1px solid #0b0b0d" loading="lazy">
+        <div><h3>On a phone, and more</h3>
+          <p class="muted">Every page works on a phone. <b>+ Add game</b> puts a ROM you own into the library from the
+            page. Learning is saved per game and resumes next time. Unknown games get sensible controls and the fly
+            works out which sprite it is.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="found">
+    <div class="mod"><b>03</b> results</div>
+    <h2>Scramble the wiring and it stalls</h2>
+    <div class="split">
+      <div class="bars" role="img" aria-label="Super Mario Bros., new ground covered, 5 runs each: real wiring 3,214 pixels, scrambled wiring 563, holding right with no brain 0.">
+        <h3>Super Mario Bros. &middot; new ground covered, 5 runs each</h3>
+        <div class="row"><span>real wiring</span><div class="track"><div class="fill" style="width:96%;background:var(--green)"></div></div><b>3,214</b></div>
+        <div class="row"><span>scrambled</span><div class="track"><div class="fill" style="width:17%;background:var(--bad)"></div></div><b>563</b></div>
+        <div class="row"><span>hold right, no brain</span><div class="track"><div class="fill" style="width:0"></div></div><b>0</b></div>
+        <p class="note">Pixels of new ground. Real vs scrambled (same neurons and connection counts, shuffled): Mann-Whitney p = 0.03. Holding right covers nothing: the game needs jumps.</p>
+      </div>
+      <div>
+        <h3>What we found, honestly</h3>
+        <ul class="honest">
+          <li><b>The wiring matters.</b> The real connectome covered about 6&times; the ground of a degree-preserving scrambled copy.</li>
+          <li><b>Learning helps, then plateaus.</b> In Galaga the reward learner gives about 3&times; the score (p = 0.003).</li>
+          <li><b>Not everything worked.</b> A game-event reward feed and an n-step TD learner did not beat the simpler defaults; they are left in to experiment with.</li>
+          <li><b>Best at action games.</b> Shooters, platformers, maze and racing games. Sports, RPGs and puzzles are marked "not suited": the fly needs moving things to react to.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section id="start">
+    <div class="mod"><b>04</b> run it</div>
+    <h2>Run it, with games you own</h2>
+    <p class="muted">Python 3.10+. An NVIDIA GPU runs 4 voting flies per axis at full speed; a CPU runs 1 (slower, still
+      works). The brain (~260 MB) downloads itself on the first run.</p>
+    <div class="codebox">
+      <button class="copy" type="button" data-copy="setup">COPY</button>
+<pre id="setup">git clone https://github.com/arpanguria68-ui/fly-plays-nes.git
+cd fly-plays-nes
+python -m venv .venv
+.venv/Scripts/pip install -r requirements.txt
+.venv/Scripts/pip install -r requirements-gpu.txt   <span class="c"># NVIDIA GPU only</span>
+
+<span class="c"># put games you own in roms/ (or use "+ Add game" on the page), then:</span>
+.venv/Scripts/python mesen/connect.py              <span class="c"># http://127.0.0.1:8777/</span></pre>
+    </div>
+    <div class="callout" style="margin-top:16px">
+      <h3>No games are included</h3>
+      <p>This project does not include or link to any ROMs. Use cartridges you own, dumped with a cartridge dumper, or
+        homebrew and public-domain games shared by their authors. Your games stay on your PC.</p>
+    </div>
+  </section>
+
+  <section>
+    <div class="mod"><b>05</b> sister project</div>
+    <a class="sister" href="https://arpanguria68-ui.github.io/fly-ears/">
+      <img src="https://arpanguria68-ui.github.io/fly-ears/walkthrough.jpg" alt="fly-ears: an approaching disc, the fly's looming neurons filling, the brain map in amber" loading="lazy">
+      <div><b>fly-ears</b><span>The same fly brain watches your videos and hears your music, through its own photoreceptors and ears, with a 3D body and honest checks.</span></div>
+    </a>
+  </section>
+</div>
+</main>
+
+<footer>
+  <div class="wrap">
+    <p>Code: MIT. The connectome simulation is from <a href="https://github.com/alextitonis/fly.ai">fly.ai</a> by alextitonis (MIT).
+      Brain data built from the <a href="https://male-cns.janelia.org">MaleCNS v1.0 connectome</a> (Janelia FlyEM and collaborators, CC BY 4.0).
+      NES emulation by <a href="https://github.com/Youlixx/cynes">cynes</a> (MIT).</p>
+    <p>Nintendo, NES and game titles are trademarks of their owners; this project is not affiliated with or endorsed by them.</p>
+  </div>
+</footer>
+<script>
+document.querySelectorAll(".copy").forEach((b) => b.addEventListener("click", async () => {
+  try { await navigator.clipboard.writeText(document.getElementById(b.dataset.copy).innerText); b.textContent = "COPIED"; }
+  catch (e) { b.textContent = "SELECT + COPY"; }
+  setTimeout(() => { b.textContent = "COPY"; }, 1600);
+}));
+</script>
+</body>
+</html>

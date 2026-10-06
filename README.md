@@ -1,5 +1,7 @@
 # FLYBRAIN · NES: a real fly brain plays NES games
 
+**Project page: <https://arpanguria68-ui.github.io/fly-plays-nes/>**
+
 ![Demo: a fruit fly's connectome plays Galaga, sees through its motion detectors and presses the buttons](docs/demo.gif)
 
 **Demo videos:** [launch video, 20 s](docs/flybrain_launch.mp4) ·
